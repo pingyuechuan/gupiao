@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --up: #ff5470;
+  --down: #19c37d;
+  --accent: #5b8cff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(91, 140, 255, 0.16), transparent 55%),
+    radial-gradient(900px 500px at -5% 110%, rgba(160, 107, 255, 0.14), transparent 55%),
+    #06080f;
+  color: #e8ebf2;
+  font-family: Inter, system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+  background-clip: content-box;
+}
+
+@layer components {
+  /* 玻璃卡片 */
+  .glass {
+    background: rgba(255, 255, 255, 0.045);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.55), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  }
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(22px) saturate(150%);
+    -webkit-backdrop-filter: blur(22px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* 渐变文字 */
+  .text-gradient {
+    background: linear-gradient(135deg, #37e6c9 0%, #5b8cff 45%, #a06bff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* 强调按钮 */
+  .btn-accent {
+    background: linear-gradient(135deg, #37e6c9 0%, #5b8cff 45%, #a06bff 100%);
+    color: #06080f;
+    font-weight: 600;
+    border: none;
+    transition: filter 0.2s ease, transform 0.1s ease;
+  }
+  .btn-accent:hover {
+    filter: brightness(1.08);
+  }
+  .btn-accent:active {
+    transform: scale(0.98);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    line-height: 1.6;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    color: #8b93a7;
+  }
+}
+
+@layer utilities {
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    animation: shimmer 1.6s infinite;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .text-up {
+    color: var(--up);
+  }
+  .text-down {
+    color: var(--down);
+  }
+}
+
+/* 聊天内容排版 */
+.coach-bubble p {
+  margin: 0 0 8px;
+  line-height: 1.7;
+}
+.coach-bubble p:last-child {
+  margin-bottom: 0;
+}
+.coach-bubble strong {
+  color: #fff;
+}
+.coach-bubble .hl {
+  color: #37e6c9;
+  font-weight: 600;
+}
