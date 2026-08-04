@@ -12,6 +12,7 @@ import StockDetailPage from '@/pages/StockDetailPage';
 import OnboardingPage from '@/pages/OnboardingPage';
 import ErrorBoundary from '@/components/layout/ErrorBoundary';
 import BetaFeedback from '@/components/aims/BetaFeedback';
+import AuthGate from '@/components/auth/AuthGate';
 import { useUserStore } from '@/store/userStore';
 import { useAimsGrowthStore } from '@/store/aimsGrowthStore';
 import { useAimsDiaryStore } from '@/store/aimsDiaryStore';
@@ -53,7 +54,8 @@ function Shell() {
   );
 }
 
-export default function App() {
+/** 应用主体：仅在登录通过后挂载，避免未登录时发起无谓的行情请求 */
+function AuthedApp() {
   const onboarded = useUserStore((s) => s.onboarded);
   const location = useLocation();
 
@@ -88,5 +90,13 @@ export default function App() {
       <Shell />
       <BetaFeedback />
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthGate>
+      <AuthedApp />
+    </AuthGate>
   );
 }

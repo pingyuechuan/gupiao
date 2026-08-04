@@ -8,6 +8,8 @@ import GrowthPanel from '@/components/aims/GrowthPanel';
 import AccuracyPanel from '@/components/aims/AccuracyPanel';
 import DiaryPanel from '@/components/aims/DiaryPanel';
 import FeedbackList from '@/components/aims/FeedbackList';
+import { useAuthStore } from '@/store/authStore';
+import { isSupabaseConfigured } from '@/lib/supabase';
 
 const TEACH = [
   { icon: '📈', title: '为什么涨 / 跌', body: '买的人多、愿意出更高价 → 涨；卖的人多、竞相压价 → 跌。价格就是买卖双方的博弈结果，不用想复杂。' },
@@ -24,6 +26,8 @@ export default function MePage() {
   const mode = useUserStore((s) => s.mode);
   const toggleMode = useUserStore((s) => s.toggleMode);
   const resetProfile = useUserStore((s) => s.resetProfile);
+  const email = useAuthStore((s) => s.user?.email ?? '');
+  const signOut = useAuthStore((s) => s.signOut);
 
   const reTest = () => {
     resetProfile();
@@ -142,6 +146,20 @@ export default function MePage() {
                 数据来自公开行情接口，仅供学习参考，不构成投资建议
               </span>
             </div>
+            {isSupabaseConfigured && (
+              <div className="flex items-center justify-between border-t border-line pt-3">
+                <div>
+                  <div className="text-[13.5px] font-medium text-txt">当前账号</div>
+                  <div className="text-[11.5px] text-txt-dim">{email || '未登录'}</div>
+                </div>
+                <button
+                  onClick={() => void signOut()}
+                  className="rounded-lg border border-line bg-white/4 px-3 py-1.5 text-[12.5px] text-txt-dim transition-colors hover:border-down/50 hover:text-down"
+                >
+                  退出登录
+                </button>
+              </div>
+            )}
           </div>
         </GlassCard>
       </div>

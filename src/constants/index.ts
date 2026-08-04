@@ -10,7 +10,7 @@ import type {
 /** 应用版本 / 阶段标识（Beta 反馈与首页展示用） */
 export const APP_NAME = 'Project Phoenix';
 export const APP_STAGE = 'Beta';
-export const APP_VERSION = '0.7';
+export const APP_VERSION = '0.8';
 
 /** 默认数据源（本机东方财富 502，优先用同花顺） */
 export const DEFAULT_PROVIDER: DataProviderName =

@@ -1,16 +1,17 @@
 {
-  "name": "a-share-ai-coach",
+  "name": "project-phoenix",
   "private": true,
-  "version": "2.0.0",
+  "version": "0.8.0",
   "type": "module",
   "description": "A股AI智能投资终端 —— 面向小白的AI投资教练（React + TS + Vite + Tailwind + Framer Motion + ECharts + React Query + Zustand）。",
   "scripts": {
     "dev": "vite",
-    "build": "rm -rf dist && tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.0",
     "@tanstack/react-query": "^5.51.23",
     "axios": "^1.7.7",
     "dayjs": "^1.11.13",
