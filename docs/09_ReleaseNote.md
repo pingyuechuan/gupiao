@@ -75,11 +75,71 @@
 
 ---
 
-## v0.8 — 计划中：可交付上线
+## v0.8 — Beta Online：可交付上线
 
-**版本目标**：Deployability（让真实用户能用、能被观测、能反馈）
-**范围**：行情代理上生产 / 反馈上云 / Analytics 埋点 / CI-CD / 域名与免责
-**不含**：任何新功能、任何 UI 改动、任何 AIMS 逻辑调整
+**发布日期**：2026-08-04　｜　**版本目标**：让真实用户能访问并注册登录体验　｜　**Sprint**：S2
+**RFC**：`docs/rfc/RFC-001-V0.8-Beta-Online.md`（已批准）
+
+### 新增
+
+**生产行情网关**
+- `api/gw/[...slug].ts` — Vercel Serverless Function，替代 vite dev proxy 的 8 条规则
+- 覆盖全部上游：东财实时/历史/搜索、新浪快照、腾讯快照/K线、新浪分钟线、同花顺主数据源
+- GBK 编码原样透传（新浪数据不乱码），边缘缓存 5s，GET-only 防滥用
+- `vercel.json` rewrites 使前端代码零改动（`src/services/http.ts` 相对路径不变）
+
+**健康检查端点**
+- `api/health.ts` — GET `/api/health` 存活探针；`?deep=1` 逐个探测 8 个上游可达性与延迟
+- **部署后必须第一时间跑 deep 模式**，验证境外机房能否访问国内行情源（风险 R1）
+
+**Supabase 登录认证**
+- 邮箱 + 密码登录/注册（非 Magic Link——避免 Supabase 免费邮件频控导致测试用户收不到链接）
+- `AuthGate` 门禁组件：未登录不得进入应用主体；未配置 Supabase 时自动放行（本地开发不被阻断）
+- 「我的」页设置卡内新增「当前账号 / 退出登录」入口
+- 报错自动翻译为中文（密码错误 / 已注册 / 格式不对 / 网络失败等）
+
+### 变更
+
+| 文件 | 改动 |
+|---|---|
+| `App.tsx` | 拆分为 `AuthedApp`（仅登录后挂载）+ `App`（外层 AuthGate 包裹） |
+| `MePage.tsx` | 设置卡追加账号/登出行 |
+| `tsconfig.json` | include 加入 `api/` |
+| `vite-env.d.ts` | 新增 `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` 类型声明 |
+| `.env.example` | 新增 Supabase 环境变量说明 |
+| `package.json` | name→`project-phoenix`，version→`0.8.0`，build 脚本跨平台化 |
+| `constants/index.ts` | `APP_VERSION` → `0.8` |
+
+### 修复
+
+| ID | 问题 | 处理 |
+|---|---|---|
+| BUG-001 | 生产环境无行情代理 | ✅ **已解决** — Serverless 网关替代 vite proxy |
+
+### 质量
+
+| 门禁 | 结果 |
+|---|---|
+| `tsc --noEmit`（含 api/） | ✅ 0 错误 |
+| `vite build` | ✅ 成功（1163 模块） |
+| 网关离线测试（esbuild bundle + mock req/res） | ✅ 7/8 上游通过（em 在当前网络不可达，非网关缺陷） |
+| GBK 编码透传验证 | ✅ charset=GB18030/GBK/gbk 全部原样保留 |
+| AuthGate Playwright 测试（gate 路径） | ✅ 7/7 通过（登录页拦截 + Beta 标识 + 风险提示） |
+| AuthGate Playwright 测试（bypass 路径） | ✅ 5/5 通过（未配置时放行进入引导页） |
+
+### 未解决的已知问题
+
+| ID | 问题 | 等级 | 归属版本 |
+|---|---|---|---|
+| BUG-002 | 无 Analytics，无法观测任何用户行为 | P0 | V0.82 |
+| BUG-003 | 反馈仅存本地，团队收不到 | P0 | V0.81 |
+| BUG-004 | 准确率统计口径过宽（未定义持有周期） | P1 | V0.9+ |
+| RISK-R1 | **境外机房能否访问国内行情源？需部署后实测** | P0 | 本版验收项 |
+
+### 不含
+
+本版本**未**增加任何新页面，**未**修改 UI 风格与信息架构，**未**增加任何 AI 功能。
+Feedback Center 归入 V0.81，Analytics 归入 V0.82，CI/CD 归入 V0.83。
 
 ---
 

@@ -23,7 +23,7 @@
 | 版本 | 代号 | 唯一目标 | 状态 | RFC |
 |---|---|---|---|---|
 | 0.7 | AIMS | 建立 AI 护城河（AIMS 决策引擎成型） | ✅ 已完成 | — |
-| **0.8** | **Beta Online** | **让真实用户能够访问并开始测试** | 🟡 RFC 待批准 | [RFC-001](./rfc/RFC-001-V0.8-Beta-Online.md) |
+| **0.8** | **Beta Online** | **让真实用户能够访问并开始测试** | ✅ 代码完成，待部署 | [RFC-001](./rfc/RFC-001-V0.8-Beta-Online.md) |
 | 0.81 | Feedback | 收集真实用户反馈 | ⬜ 未启动 | 待提 |
 | 0.82 | Analytics | 用数据而非感觉做决策 | ⬜ 未启动 | 待提 |
 | 0.83 | CI/CD | 发布流程自动化与可回滚 | ⬜ 未启动 | 待提 |
@@ -150,7 +150,7 @@ HTTPS · 自定义域名 · 登录认证 · Beta Banner · 基础健康检查
 | Frontend | Vercel | ✅ PO 批准 | 存在国内可达性风险，Spike 验证（RFC-001 R2） |
 | Backend | Railway 独立网关 | ✅ PO 批准 | 我原建议 Vercel Serverless，**PO 决定用 Railway，执行**。<br>补充理由：同花顺上游是 **http 明文**，必须由后端做 https→http 桥接，纯前端方案不可行 |
 | Database | Supabase | ✅ PO 批准 | 0.8 只建 project 不建表；`feedback`→0.81，`analytics_events`→0.82 |
-| 登录认证 | 待定 | 🟡 待裁决 | 我原用五问否决账号体系；PO 将其列入 0.8。<br>形态三选一见 **RFC-001 §8 D2**，我推荐「邀请码门禁」 |
+| 登录认证 | Supabase 邮箱+密码 | ✅ 已实现 | 采用邮箱密码登录（非 Magic Link，避免 Supabase 免费邮件频控）<br>AuthGate 门禁：未配置时自动放行（本地开发不阻断） |
 
 ---
 
@@ -163,7 +163,7 @@ HTTPS · 自定义域名 · 登录认证 · Beta Banner · 基础健康检查
 | Sprint | 目标版本 | 状态 |
 |---|---|---|
 | S1 | 0.7 AIMS | ✅ 已结束 |
-| S2 | 0.8 Beta Online | 🟡 RFC 待批准 |
+| S2 | 0.8 Beta Online | ✅ 代码完成，待部署 |
 | S3 | 0.81 Feedback + 0.82 Analytics | ⬜ |
 | S4 | 0.83 CI/CD | ⬜ |
 | S5 | 0.9 AI Quality | ⬜ |
