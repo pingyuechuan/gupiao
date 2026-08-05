@@ -127,17 +127,26 @@ git push --follow-tags
 - ✅ 看到指数数据（上证 / 深证 / 创业板）→ **网关正常，国内行情源可达**
 - ❌ 全部显示加载中或空 → **上游不可达（风险 R1 触发）**
 
-### 4.4 运行健康检查 Deep 模式
+### 4.4 运行健康检查 Deep 模式（验收 R1 风险）
 
-在浏览器地址栏输入：
+推荐用脚本做标准化验收（零依赖，Node 22+）：
 
+```bash
+node scripts/health_check.mjs 你的域名.vercel.app
+# 也接受完整 URL：node scripts/health_check.mjs https://你的域名.vercel.app/
 ```
-https://你的域名.vercel.app/api/health?deep=1
-```
 
-预期结果：返回 JSON，其中 `status` 字段为 `"ok"` 或 `"degraded"`（至少主数据源同花顺可达）。
+脚本会打印每个上游的可达性，并给出结论：
 
-如果 `status: "down"` 且所有 upstream 的 `ok: false` → **境外机房无法访问国内行情源，需要换架构**。截图发给我。
+| 退出码 | 结论 | 含义 | 动作 |
+|---|---|---|---|
+| `0` | 🟢 PASS | `status: ok`，主数据源同花顺可达 | 可正式邀请测试用户 |
+| `1` | 🟡 WARN | `status: degraded`，部分上游不可达 | 可上线，观察首页行情完整性 |
+| `2` | 🔴 FAIL | `status: down`，全部上游不可达 | 风险 R1 触发，架构需重评（非产品 Bug），截图发我 |
+| `3` | ⚠️ 无法连接 | 域名未生效 / DNS 未传播 / 部署未完成 | 等 1~2 分钟重试 |
+
+> 手动验证（可选）：浏览器打开 `https://你的域名.vercel.app/api/health?deep=1`，
+> 看 JSON 里 `status` 字段。环境变量与环境含义见 `docs/ENV_VARS.md`。
 
 ---
 
@@ -190,4 +199,4 @@ git checkout v0.7.0
 
 ---
 
-*文档版本：V0.8 · 最后更新：2026-08-04*
+*文档版本：V0.8 · 最后更新：2026-08-05 · 环境变量详见 `docs/ENV_VARS.md`*

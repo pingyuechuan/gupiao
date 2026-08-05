@@ -1,4 +1,4 @@
-import { TARGETS, fetchUpstream, type GwRequest, type GwResponse } from './_shared';
+import { TARGETS, fetchUpstream, sendJson, sendError, type GwRequest, type GwResponse } from './_shared';
 
 /**
  * 基础健康检查 —— V0.8 验收项。
@@ -48,34 +48,39 @@ async function probe(key: string): Promise<ProbeResult> {
 }
 
 export default async function handler(req: GwRequest, res: GwResponse): Promise<void> {
-  res.setHeader('Cache-Control', 'no-store');
+  try {
+    res.setHeader('Cache-Control', 'no-store');
 
-  const base = {
-    service: 'project-phoenix',
-    version: process.env.VITE_APP_VERSION ?? '0.8',
-    stage: 'beta',
-    time: new Date().toISOString(),
-    region: process.env.VERCEL_REGION ?? 'unknown',
-    commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'local',
-  };
+    const query = req.query ?? {};
+    const base = {
+      service: 'project-phoenix',
+      version: process.env.VITE_APP_VERSION ?? '0.8',
+      stage: 'beta',
+      time: new Date().toISOString(),
+      region: process.env.VERCEL_REGION ?? 'unknown',
+      commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'local',
+    };
 
-  const deep = req.query.deep === '1' || req.query.deep === 'true';
-  if (!deep) {
-    res.status(200).json({ ...base, status: 'ok' });
-    return;
+    const deep = query.deep === '1' || query.deep === 'true';
+    if (!deep) {
+      sendJson(res, 200, { ...base, status: 'ok' });
+      return;
+    }
+
+    const results = await Promise.all(Object.keys(TARGETS).map(probe));
+    const reachable = results.filter((r) => r.ok).length;
+
+    // 同花顺是主数据源，它挂了即使别的活着也只能算降级
+    const primaryOk = results.find((r) => r.key === 'ths')?.ok ?? false;
+    const status = reachable === 0 ? 'down' : primaryOk && reachable >= 6 ? 'ok' : 'degraded';
+
+    sendJson(res, status === 'down' ? 503 : 200, {
+      ...base,
+      status,
+      summary: `${reachable}/${results.length} 个上游可达，主数据源（同花顺）${primaryOk ? '正常' : '不可达'}`,
+      upstreams: results.sort((a, b) => Number(b.ok) - Number(a.ok) || a.ms - b.ms),
+    });
+  } catch (err) {
+    sendError(res, err, 'health');
   }
-
-  const results = await Promise.all(Object.keys(TARGETS).map(probe));
-  const reachable = results.filter((r) => r.ok).length;
-
-  // 同花顺是主数据源，它挂了即使别的活着也只能算降级
-  const primaryOk = results.find((r) => r.key === 'ths')?.ok ?? false;
-  const status = reachable === 0 ? 'down' : primaryOk && reachable >= 6 ? 'ok' : 'degraded';
-
-  res.status(status === 'down' ? 503 : 200).json({
-    ...base,
-    status,
-    summary: `${reachable}/${results.length} 个上游可达，主数据源（同花顺）${primaryOk ? '正常' : '不可达'}`,
-    upstreams: results.sort((a, b) => Number(b.ok) - Number(a.ok) || a.ms - b.ms),
-  });
 }

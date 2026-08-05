@@ -13,11 +13,29 @@ export interface GwRequest {
 
 /** Vercel Node Runtime 响应对象（最小可用子集） */
 export interface GwResponse {
+  statusCode: number;
   status(code: number): GwResponse;
   setHeader(name: string, value: string): void;
   send(body: string | Buffer): void;
   json(body: unknown): void;
-  end(): void;
+  end(body?: string | Buffer): void;
+}
+
+/**
+ * 发送 JSON —— 刻意只用原生 http.ServerResponse 能力（statusCode / setHeader / end），
+ * 不依赖 @vercel/node 的 res.json() 辅助方法，避免运行时方法缺失导致 500。
+ */
+export function sendJson(res: GwResponse, statusCode: number, body: unknown): void {
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(typeof body === 'string' ? body : JSON.stringify(body));
+}
+
+/** 把未捕获异常序列化为可读 JSON（替代被平台吞掉的 FUNCTION_INVOCATION_FAILED）。 */
+export function sendError(res: GwResponse, err: unknown, stage = 'handler'): void {
+  const message = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? err.stack : undefined;
+  sendJson(res, 500, { error: 'internal_error', stage, message, stack });
 }
 
 export const EM_UA =
