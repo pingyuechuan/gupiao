@@ -1,20 +1,35 @@
-import { TARGETS, fetchUpstream, sendJson, sendError, type GwRequest, type GwResponse } from '../_shared';
-
 /**
- * 生产行情网关 —— 替代 vite.config.ts 中仅在 dev 生效的 8 条 proxy。
+ * 生产行情网关 —— 零依赖版（不导入 _shared.ts）
  *
  * 路由：vercel.json 把 /em/* /emh/* /ems/* /sina/* /tc/* /tk/* /sk/* /ths/*
- *      重写到 /api/gw/<prefix>/*，因此前端 src/services/http.ts 的相对路径
- *      在开发与生产下保持完全一致，业务代码零改动。
+ *      重写到 /api/gw/<prefix>/*
  *
- * 响应按二进制原样透传并保留 Content-Type，
- * 以确保新浪 GBK 编码的响应能被浏览器正确解码。
+ * 响应按二进制原样透传并保留 Content-Type（含 GBK）。
  */
-export default async function handler(req: GwRequest, res: GwResponse): Promise<void> {
+
+const TARGETS: Record<string, { base: string; referer?: string }> = {
+  em:  { base: 'https://push2.eastmoney.com' },
+  emh: { base: 'https://push2his.eastmoney.com' },
+  ems: { base: 'https://searchapi.eastmoney.com' },
+  sina: { base: 'https://hq.sinajs.cn' },
+  tc:   { base: 'https://qt.gtimg.cn' },
+  tk:   { base: 'https://web.ifzq.gtimg.cn' },
+  sk:   { base: 'https://quotes.sina.cn' },
+  ths:  { base: 'http://d.10jqka.com.cn' },
+};
+
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+function json(res: any, status: number, body: unknown) {
+  res.statusCode = status;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(typeof body === 'string' ? body : JSON.stringify(body));
+}
+
+export default async function handler(req: any, res: any): Promise<void> {
   try {
-    // 仅允许读取行情，杜绝被当作开放代理滥用
     if (req.method && req.method !== 'GET' && req.method !== 'HEAD') {
-      sendJson(res, 405, { error: 'method_not_allowed' });
+      json(res, 405, { error: 'method_not_allowed' });
       return;
     }
 
@@ -23,32 +38,32 @@ export default async function handler(req: GwRequest, res: GwResponse): Promise<
     const prefix = segments[0];
 
     if (!prefix || !Object.prototype.hasOwnProperty.call(TARGETS, prefix)) {
-      sendJson(res, 404, { error: 'unknown_upstream', prefix: prefix ?? null });
+      json(res, 404, { error: 'unknown_upstream', prefix: prefix ?? null });
       return;
     }
     const target = TARGETS[prefix];
 
-    // 还原上游路径：/api/gw/em/api/qt/stock/get -> /api/qt/stock/get
     const path = segments.slice(1).join('/');
-
-    // 还原 query：从原始 url 取，并剔除 Vercel 注入的 slug 键
     const raw = req.url ?? '';
     const qIndex = raw.indexOf('?');
     const params = new URLSearchParams(qIndex >= 0 ? raw.slice(qIndex + 1) : '');
     params.delete('slug');
     const qs = params.toString();
 
-    const upstreamUrl = `${target.base}/${path}${qs ? `?${qs}` : ''}`;
+    const upstreamUrl = `${target.base}${path ? '/' + path : ''}${qs ? '?' + qs : ''}`;
 
     try {
-      const upstream = await fetchUpstream(upstreamUrl, target);
-      const buf = Buffer.from(await upstream.arrayBuffer());
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      const upstream = await fetch(upstreamUrl, {
+        signal: controller.signal,
+        headers: { 'User-Agent': UA, Accept: '*/*', ...(target.referer ? { Referer: target.referer } : {}) },
+      });
+      clearTimeout(timer);
 
-      // 原样保留 content-type（含 charset=GBK），否则新浪数据会乱码
+      const buf = Buffer.from(await upstream.arrayBuffer());
       const ct = upstream.headers.get('content-type');
       if (ct) res.setHeader('Content-Type', ct);
-
-      // 边缘缓存 5s：行情延迟可接受，但能大幅降低上游封禁与额度消耗风险
       res.setHeader('Cache-Control', 'public, s-maxage=5, stale-while-revalidate=25');
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('X-Phoenix-Upstream', prefix);
@@ -59,13 +74,18 @@ export default async function handler(req: GwRequest, res: GwResponse): Promise<
       const message = err instanceof Error ? err.message : String(err);
       const aborted = message.includes('abort') || message.includes('timeout');
       res.setHeader('Cache-Control', 'no-store');
-      sendJson(res, aborted ? 504 : 502, {
+      json(res, aborted ? 504 : 502, {
         error: aborted ? 'upstream_timeout' : 'upstream_error',
         upstream: prefix,
         detail: message,
       });
     }
   } catch (err) {
-    sendError(res, err, 'gw');
+    json(res, 500, {
+      error: 'internal_error',
+      stage: 'gw',
+      message: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    });
   }
 }
