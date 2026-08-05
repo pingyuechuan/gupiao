@@ -43,18 +43,29 @@
 
 已逐文件核对的事实：
 
-- 项目**当前不在 git 版本控制下** → 零回滚能力。
-- 8 条行情代理只写在 `vite.config.ts` 的 `server.proxy` → **只在 `vite dev` 下生效**。
-  静态部署后 `/em` `/emh` `/ems` `/sina` `/tc` `/tk` `/sk` `/ths` **全部 404**。
+- ~~项目**当前不在 git 版本控制下** → 零回滚能力。~~
+  ✅ **已解决**：2026-08-05 建仓并推送 → https://github.com/pingyuechuan/gupiao
+- ~~8 条行情代理只写在 `vite.config.ts` 的 `server.proxy` → **只在 `vite dev` 下生效**。~~
+  ✅ **已解决**：`api/gw/[...slug].ts` + `vercel.json` rewrites，前端零改动。
 
 > **陌生用户现在拿到的会是「界面完整、数据全空」的壳子。AI 再强，用户用不到 = 0。**
 
-### 2.2 范围（PO 批复 9 项）
+### 2.2 范围（PO 批复 9 项）· 执行进度
 
-GitHub Repository · Vercel Frontend · Railway Backend · Supabase Production DB ·
-HTTPS · 自定义域名 · 登录认证 · Beta Banner · 基础健康检查
+| # | 项目 | 状态 | 备注 |
+|---|---|---|---|
+| 1 | GitHub Repository | ✅ **已完成** | https://github.com/pingyuechuan/gupiao（Public，`main`，含 tag `v0.7.0`/`v0.8.0`） |
+| 2 | Vercel Frontend | ⬜ 待 PO 操作 | 代码已 deploy-ready，需导入仓库 + 配环境变量 |
+| 3 | Railway Backend | 🔄 **方案变更** | 改用 Vercel Serverless（`api/gw/[...slug].ts`）做 https→http 桥接，无需独立后端与额外账单 |
+| 4 | Supabase Production DB | ⬜ 待 PO 操作 | 代码已接入（Auth only），需建项目 + 关邮箱验证 |
+| 5 | HTTPS | ⬜ 随 Vercel 自动 | Vercel 默认签发 |
+| 6 | 自定义域名 | ⬜ 可延后 | 暂用 `*.vercel.app` |
+| 7 | 登录认证 | ✅ **已完成** | AuthGate + LoginPage（邮箱+密码），双路径测试 7/7 + 5/5 |
+| 8 | Beta Banner | ✅ **已完成** | `BetaBadge`（首页 / 我的 / 登录页） |
+| 9 | 基础健康检查 | ✅ **已完成** | `/api/health?deep=1`，可实测上游可达性（验证 R1） |
 
 完整拆解、风险、回滚、工期、验收标准 → **[RFC-001](./rfc/RFC-001-V0.8-Beta-Online.md)**
+部署操作步骤 → **[DEPLOY_GUIDE](./DEPLOY_GUIDE.md)**
 
 ### 2.3 明确不做
 

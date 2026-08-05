@@ -40,25 +40,43 @@
 
 ---
 
-## 第二步：推送到 GitHub（3 分钟）
+## 第二步：推送到 GitHub ✅ 已完成（2026-08-05）
+
+**仓库地址**：https://github.com/pingyuechuan/gupiao
+**可见性**：Public ⚠️
+**默认分支**：`main`
+**已推送**：3 个提交 + tag `v0.7.0` / `v0.8.0`（128 个文件）
+
+实际执行的命令（**注意与 GitHub 页面给的模板不同**）：
 
 ```bash
 cd E:\PWB\2026-07-29-23-18-46
 
-# 如果还没有 GitHub remote：
-git remote add origin https://github.com/<你的用户名>/project-phoenix.git
-
-# 推送全部代码与 tag
-git push -u origin main --tags
+# 本仓库早已 git init 且有 3 个提交，
+# 因此【跳过】GitHub 模板里的 echo README / git init / git add / git commit
+git branch -M main
+git remote add origin https://github.com/pingyuechuan/gupiao.git
+git push -u origin main --follow-tags
 ```
 
-如果还没有 GitHub 仓库：
+> ⚠️ **为什么不能照抄 GitHub 的模板命令**
+> GitHub 新建仓库页给的是「**全新空目录**」的初始化流程。本项目已有 git 历史：
+> - `echo "# gupiao" >> README.md` 会污染已有的 5KB 项目 README
+> - `git init` / `git add README.md` / `git commit -m "first commit"` 会制造一个
+>   与 `v0.7.0` 基线无关的多余提交，破坏版本追溯
+>
+> ⚠️ **仓库当前为 Public**：任何人可读源码。密钥不在仓库内
+> （`.gitignore` 已排除 `.env*`，`git ls-files` 扫描 0 命中），
+> Supabase anon key 仅配置在 Vercel 环境变量中。
+> 如需闭源：GitHub → Settings → 页面底部 Danger Zone → Change visibility → Private。
 
-1. 打开 https://github.com/new
-2. Repository name: `project-phoenix`
-3. **不要勾选** README / .gitignore / License（本地已有）
-4. 点击 **Create repository**
-5. 按页面提示执行 `git remote add` 和 `git push`
+后续推送新版本：
+
+```bash
+git add -A
+git commit -m "..."
+git push --follow-tags
+```
 
 ---
 
