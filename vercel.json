@@ -10,14 +10,14 @@
     }
   },
   "rewrites": [
-    { "source": "/em/:path*", "destination": "/api/gw/em/:path*" },
-    { "source": "/emh/:path*", "destination": "/api/gw/emh/:path*" },
-    { "source": "/ems/:path*", "destination": "/api/gw/ems/:path*" },
-    { "source": "/sina/:path*", "destination": "/api/gw/sina/:path*" },
-    { "source": "/tc/:path*", "destination": "/api/gw/tc/:path*" },
-    { "source": "/tk/:path*", "destination": "/api/gw/tk/:path*" },
-    { "source": "/sk/:path*", "destination": "/api/gw/sk/:path*" },
-    { "source": "/ths/:path*", "destination": "/api/gw/ths/:path*" },
+    { "source": "/em/:path*", "destination": "/api/gw?slug=em/:path*" },
+    { "source": "/emh/:path*", "destination": "/api/gw?slug=emh/:path*" },
+    { "source": "/ems/:path*", "destination": "/api/gw?slug=ems/:path*" },
+    { "source": "/sina/:path*", "destination": "/api/gw?slug=sina/:path*" },
+    { "source": "/tc/:path*", "destination": "/api/gw?slug=tc/:path*" },
+    { "source": "/tk/:path*", "destination": "/api/gw?slug=tk/:path*" },
+    { "source": "/sk/:path*", "destination": "/api/gw?slug=sk/:path*" },
+    { "source": "/ths/:path*", "destination": "/api/gw?slug=ths/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
