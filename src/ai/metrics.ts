@@ -1,4 +1,5 @@
 export function clamp(v: number, min: number, max: number): number {
+  if (!Number.isFinite(v)) return min; // NaN / Infinity 安全回落
   return Math.max(min, Math.min(max, v));
 }
 

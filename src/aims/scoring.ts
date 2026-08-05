@@ -47,7 +47,7 @@ export function resolveSector(secid: string, liveSectors: Sector[]): Sector | nu
 /* ===================== 资金维度 ===================== */
 export function scoreCapital(quote: Quote, klines: Kline[]): { score: number; note: string } {
   let score = 50;
-  const turnover = quote.turnoverRate ?? 0;
+  const turnover = Number.isFinite(quote.turnoverRate) ? quote.turnoverRate : 0; // ?? 拦不住 NaN
   score += Math.min(turnover, 12) * 1.4;
   if (klines.length >= 10) {
     const vol = klines.map((k) => k.volume);
@@ -86,9 +86,12 @@ export function scoreRisk(quote: Quote, klines: Kline[]): { level: number; note:
   let level = 30;
   if (klines.length >= 20) {
     const recent = klines.slice(-20);
-    const volat =
-      recent.reduce((s, k) => s + Math.abs(k.high - k.low) / ((k.high + k.low) / 2 || 1), 0) / 20 * 100;
-    level += Math.max(0, volat - 2) * 4;
+    // 跳过 high/low 为 NaN 的 K 线，防止污染波动率
+    const valid = recent.filter((k) => Number.isFinite(k.high) && Number.isFinite(k.low) && (k.high + k.low) !== 0);
+    if (valid.length > 0) {
+      const volat = valid.reduce((s, k) => s + Math.abs(k.high - k.low) / ((k.high + k.low) / 2), 0) / valid.length * 100;
+      if (Number.isFinite(volat)) level += Math.max(0, volat - 2) * 4;
+    }
   }
   const c = Math.abs(quote.changePercent);
   if (c > 9) level += 16;
@@ -122,7 +125,11 @@ export function scoreUserMatch(
   let volat = 0;
   if (klines.length >= 20) {
     const r = klines.slice(-20);
-    volat = r.reduce((s, k) => s + Math.abs(k.high - k.low) / ((k.high + k.low) / 2 || 1), 0) / 20 * 100;
+    const valid = r.filter((k) => Number.isFinite(k.high) && Number.isFinite(k.low) && (k.high + k.low) !== 0);
+    if (valid.length > 0) {
+      volat = valid.reduce((s, k) => s + Math.abs(k.high - k.low) / ((k.high + k.low) / 2), 0) / valid.length * 100;
+      if (!Number.isFinite(volat)) volat = 0;
+    }
   }
   if (risk === '低') {
     if (c > 5) m -= 12;

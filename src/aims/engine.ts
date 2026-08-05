@@ -90,7 +90,14 @@ export async function analyzeAIMS(secid: string): Promise<AIMSResult> {
     },
   ];
 
-  const finalScore = Math.round(dims.reduce((s, d) => s + d.score * d.weight, 0));
+  // 安全兜底：任一维度 NaN 时该维度按 50（中性）计，防止全盘 NaN
+  const safeDims = dims.map((d) => ({
+    ...d,
+    score: Number.isFinite(d.score) ? d.score : 50,
+    rawLevel: Number.isFinite(d.rawLevel ?? 0) ? d.rawLevel : 50,
+  }));
+
+  const finalScore = Math.round(safeDims.reduce((s, d) => s + d.score * d.weight, 0));
   const composite = clamp(Math.round(finalScore * 0.7 + userMatch.score * 0.3), 0, 100);
 
   // 结合历史行为（AI 记忆系统）
@@ -108,8 +115,9 @@ export async function analyzeAIMS(secid: string): Promise<AIMSResult> {
   const upProb = clamp(Math.round(50 + (composite - 50) * 0.9), 30, 92);
 
   let position = basePosition(composite);
-  if (risk.level > 70) position = Math.round(position * 0.5);
-  else if (risk.level > 55) position = Math.round(position * 0.8);
+  const safeRiskLevel = Number.isFinite(risk.level) ? risk.level : 50;
+  if (safeRiskLevel > 70) position = Math.round(position * 0.5);
+  else if (safeRiskLevel > 55) position = Math.round(position * 0.8);
   position = Math.round(position * positionMul);
   if (mem.riskTolerance === '低') position = Math.min(position, 40);
   if (mem.riskTolerance === '高') position = Math.min(position, 60);
@@ -122,8 +130,8 @@ export async function analyzeAIMS(secid: string): Promise<AIMSResult> {
   else if (composite >= 30) action = '减仓';
   else action = '卖出';
 
-  const actionText = buildActionText(action, quote.changePercent, risk.level, behavioralNote);
-  const oneLiner = buildOneLiner(action, behavioralNote, risk.level);
+  const actionText = buildActionText(action, quote.changePercent, safeRiskLevel, behavioralNote);
+  const oneLiner = buildOneLiner(action, behavioralNote, safeRiskLevel);
 
   return {
     secid,
@@ -137,7 +145,7 @@ export async function analyzeAIMS(secid: string): Promise<AIMSResult> {
     buyIndex,
     upProb,
     suggestedPosition: position,
-    riskIndex: risk.level,
+    riskIndex: safeRiskLevel,
     oneLiner,
     action,
     actionText,

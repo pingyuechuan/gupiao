@@ -120,12 +120,13 @@ export async function enrichQuoteFromTencent(secid: string, quote: Quote): Promi
     const enriched = parseTencentQuoteLine(symbol, line);
     if (!enriched) return quote;
 
-    // 只补充当前缺失或无效的字段，保留原数据源的名称/价格等
+    // 补充缺失或无效字段；name 也用腾讯校正（同花顺对指数代码可能返回错误名称，如 000001→平安银行）
     const hasValidBids = (quote.bids?.length ?? 0) > 0 && quote.bids!.some((b) => b.price > 0 && b.volume > 0);
     const hasValidAsks = (quote.asks?.length ?? 0) > 0 && quote.asks!.some((a) => a.price > 0 && a.volume > 0);
 
     return {
       ...quote,
+      name: enriched.name || quote.name,
       bids: hasValidBids ? quote.bids : enriched.bids,
       asks: hasValidAsks ? quote.asks : enriched.asks,
       amount: Number.isFinite(quote.amount) && quote.amount > 0 ? quote.amount : enriched.amount,

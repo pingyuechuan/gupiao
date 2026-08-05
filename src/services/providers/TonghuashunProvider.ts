@@ -7,10 +7,13 @@ import type { IDataProvider, RankType } from './types';
 const THS_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-/** 把 secid 里的 6 位代码转成同花顺内部编码 hs_xxxxxx */
+/** 把 secid 转成同花顺内部编码。
+ *  保留市场前缀避免 000001 歧义（sh000001=上证指数 vs sz000001=平安银行）。
+ *  同花顺格式：hs_{market}{code}，如 hs_1600519 / hs_000001（深市默认） */
 function toThsCode(secid: string): string {
-  const { code } = parseSecid(secid);
-  return `hs_${code}`;
+  const { code, marketPrefix } = parseSecid(secid);
+  // 沪市(1)代码加前缀区分；深市(0)保持原样（hs_0xxxxx / hs_3xxxxx 无歧义）
+  return marketPrefix === '1' ? `hs_1${code}` : `hs_${code}`;
 }
 
 /** 同花顺返回的是 JSONP，例如 quotebridge_v4_line_hs_601728_01_today({...}) */
